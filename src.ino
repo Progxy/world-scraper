@@ -2,9 +2,11 @@
 #include "ltr.h"
 #include "display.h"
 #include "bme.h"
+#include "scd.h"
 
 LTR ltr_sensor;
 BME bme_sensor;
+SCD scd_sensor;
 Display display;
 
 void setup() {
@@ -17,6 +19,7 @@ void setup() {
   ltr_sensor.set_resolution(BIT_18);
   ltr_sensor.info();
   bme_sensor.init();
+  scd_sensor.init();
   Serial.println(" ---- End Setup ---- \n");
 }
 
