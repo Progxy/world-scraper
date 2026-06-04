@@ -1,8 +1,6 @@
 #ifndef _LTR_H_
 #define _LTR_H_
 
-#include <Wire.h>
-
 typedef enum {
 	MAIN_CTRL         = 0x00,
 	ALS_UVS_MEAS_RATE = 0x04,

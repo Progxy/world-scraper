@@ -1,7 +1,7 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
-static const byte segment_base_pin = 38;
+static const byte segment_base_pin = 30;
 static const byte led_status[10][8] = {
 	{ LOW,  HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW },
     { LOW,  LOW,  LOW,  HIGH, HIGH, LOW,  LOW,  LOW },
@@ -20,7 +20,7 @@ class Display {
    	byte display_cnt = 0;
 
   	void init(byte display_cnt) {
-   	     this -> display_cnt = display_cnt;
+   	    this -> display_cnt = display_cnt;
    		for (byte i = 0; i < this -> display_cnt * 8; ++i) pinMode(segment_base_pin + i, OUTPUT);
   		return;
  	}
@@ -31,7 +31,7 @@ class Display {
   		return;
 	}
 
- 	void display(byte val) {
+ 	void display(uint32_t val) {
    		for (char idx = this -> display_cnt - 1; idx >= 0; --idx) {
     		byte digit = val % 10;
 			for (byte i = 0; i < 8; ++i) digitalWrite(segment_base_pin + i + idx * 8, led_status[digit][i]);
