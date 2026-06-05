@@ -2,7 +2,7 @@
 #define _DISPLAY_H_
 
 static const byte segment_base_pin = 30;
-static const byte led_status[10][8] = {
+static const byte led_status[11][8] = {
 	{ LOW,  HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW },
     { LOW,  LOW,  LOW,  HIGH, HIGH, LOW,  LOW,  LOW },
 	{ HIGH, LOW,  HIGH, HIGH, LOW,  HIGH, HIGH, LOW },
@@ -12,7 +12,8 @@ static const byte led_status[10][8] = {
 	{ HIGH, HIGH, HIGH, LOW,  HIGH, HIGH, HIGH, LOW },
 	{ LOW,  LOW,  HIGH, HIGH, HIGH, LOW,  LOW,  LOW },
 	{ HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW },
-	{ HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW,  LOW }
+	{ HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW,  LOW },
+    { HIGH,  LOW,  LOW,  LOW,  LOW,  LOW, LOW,  LOW }
 };
 
 class Display {
@@ -39,6 +40,14 @@ class Display {
    		}
   		return;
 	}
+
+ 	void separator(byte display_idx) {
+    	for (byte i = 0; i < 8; ++i) digitalWrite(segment_base_pin + i + display_idx * 8, led_status[10][i]);
+ 	}
+
+ 	void separator(void) {
+    	for (byte i = 0; i < this -> display_cnt; ++i) this -> separator(i);
+ 	}
 
 	void test(byte display_idx) {
 		for (byte i = 0; i < 10; ++i) {

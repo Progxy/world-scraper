@@ -27,6 +27,7 @@ static uint32_t uvi = 0;
 static int32_t  t = 0;
 static uint32_t p = 0;
 static uint32_t h = 0;
+static scd_data_t scd_data = {0};
 static int i = 0;
 
 void loop() {
@@ -41,15 +42,34 @@ void loop() {
 		t = bme_sensor.get_temperature() / 100; // NOTE: rounding loses any decimal point
 		p = (bme_sensor.get_pressure() >> 8) / 100;
 		h = bme_sensor.get_humidity() >> 10;
+
+  		// NOTE: Should either use the low power mode periodic, or normal periodic measuring instead
+  		scd_sensor.single_shot();
+        scd_data = scd_sensor.read_measurement();
 	}
 
+ 	const int display_time = 2500;
 	display.display(uvi);
-	delay(1000);
+	delay(display_time);
+ 	display.separator();
+ 	delay(1000);
+
 	display.display(t);
-	delay(1000);
+	delay(display_time);
 	display.display(p);
-	delay(1000);
+	delay(display_time);
 	display.display(h);
+	delay(display_time);
+    display.separator();
+    delay(1000);
+
+    display.display(scd_data.c02);
+	delay(display_time);
+    display.display(scd_data.t);
+	delay(display_time);
+    display.display(scd_data.rh);
+	delay(display_time);
+	display.separator();
 	delay(1000);
 
     i++;
