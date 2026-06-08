@@ -34,7 +34,8 @@ typedef enum {
 	DISPLAY_HEIGHT = 64,
 	DISPLAY_WIDTH  = 128,
 	DISPLAY_COLS   = 128,
-	DISPLAY_PAGES  = 8
+	DISPLAY_PAGES  = 8,
+	MAX_DIGIT_LEN  = 12
 } DisplayConstants;
 
 class Display {
@@ -136,11 +137,22 @@ public:
   		val *= -1;
  	}
 
- 	while (val > 0) {
+	char temp_buf[MAX_DIGIT_LEN] = {0};
+ 	byte len = 0;
+ 	for (byte i = 0; i < MAX_DIGIT_LEN && val > 0; ++i, ++len) {
    		const byte digit = val % 10;
-   		this -> print_char('0' + digit);
+  		temp_buf[i] = '0' + digit;
 		val = (val - digit) / 10;
  	}
+
+ 	for (byte j = 0; j < len/2; ++j) {
+   		char temp = temp_buf[j];
+  		temp_buf[j] = temp_buf[len - j - 1];
+  		temp_buf[len - j - 1] = temp;
+ 	}
+
+	this -> print(temp_buf);
+
  	return;
   }
 
