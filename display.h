@@ -1,6 +1,8 @@
 #ifndef _DISPLAY_H_
 #define _DISPLAY_H_
 
+#include "atlas.h"
+
 static const byte segment_base_pin = 30;
 static const byte led_status[11][8] = {
 	{ LOW,  HIGH, HIGH, HIGH, HIGH, HIGH, HIGH, LOW },
@@ -170,9 +172,17 @@ public:
   }
 
   void print(const char c) {
- 	const byte data[] = {0x00, 0x00, 0x1E, 0x05, 0x1E, 0x00, 0x00};
- 	memcpy(this -> display_buf + this -> display_idx, data, sizeof(data));
-	this -> display_idx = (this -> display_idx + sizeof(data)) % sizeof(this -> display_buf);
+    if ((this -> display_idx % DISPLAY_WIDTH) + sizeof(*font_atlas) > DISPLAY_WIDTH) {
+   		this -> display_idx += (DISPLAY_WIDTH - (this -> display_idx % DISPLAY_WIDTH));
+ 	}
+
+	if (this -> display_idx + sizeof(*font_atlas) >= sizeof(this -> display_buf)) {
+   		Serial.println("Not enough space for the character buy a bigger screen, loser!");
+ 	  return;
+ 	}
+
+ 	memcpy(this -> display_buf + this -> display_idx, font_atlas[(c - 0x20) % sizeof(font_atlas)], sizeof(*font_atlas));
+	this -> display_idx = (this -> display_idx + sizeof(*font_atlas)) % sizeof(this -> display_buf);
  	return;
   }
 

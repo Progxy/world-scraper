@@ -78,7 +78,10 @@ void loop() {
 //  i++
 
 	oled_display.clear_display();
-	for (byte i = 0; i < 32; ++i) oled_display.print('A');
+	for (byte i = 96; i < 126; ++i) {
+   		oled_display.print(i);
+ 		oled_display.print(' ');
+ 	}
  	oled_display.display();
  	delay(2000);
 }
