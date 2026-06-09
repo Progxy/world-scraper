@@ -26,7 +26,7 @@ class SCD {
 	private:
 		void read_address(uint16_t addr, scd_response_t* dest, byte cnt, uint16_t exec_time_ms = 1) {
 			byte buf[3] = {0};
-			Wire.beginTransmission(SCD_ADDRESS);
+			Wire.beginTransmission((byte) SCD_ADDRESS);
 			buf[0] = (byte) ((addr & 0xFF00) >> 8);
 			buf[1] = (byte) ((addr & 0x00FF) >> 0);
 			Wire.write(buf, 2);
@@ -37,7 +37,7 @@ class SCD {
 
 			if (cnt == 0 || dest == NULL) return;
 
-			byte received = Wire.requestFrom(SCD_ADDRESS, cnt * sizeof(scd_response_t));
+			byte received = Wire.requestFrom((byte) SCD_ADDRESS, cnt * sizeof(scd_response_t));
 			if (received < cnt * sizeof(scd_response_t)) {
 				Serial.println("Received less than requested.");
 				return;

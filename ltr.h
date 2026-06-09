@@ -148,7 +148,7 @@ class LTR {
 		}
 
 		void set_mode(LTRMode ltr_mode) {
-			this -> main_ctrl = (this -> main_ctrl & (~(status << 3))) | (status << 3); 
+			this -> main_ctrl = (this -> main_ctrl & (~(ltr_mode << 3))) | (ltr_mode << 3); 
 			this -> write_register(MAIN_CTRL, this -> main_ctrl);
 			return;
 		}

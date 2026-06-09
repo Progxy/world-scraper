@@ -28,11 +28,11 @@ static int i = 0;
 
 void loop() {
 	if ((i % SAMPLING_FREQ) == 0) {
-    ltr_sensor.sample_uvi();
+		ltr_sensor.sample_uvi();
 		bme_sensor.sample();
-    // NOTE: Should either use the low power mode periodic, or normal periodic
-    //       measuring instead
-    scd_sensor.single_shot();
+		// NOTE: Should either use the low power mode periodic, or normal periodic
+		//       measuring instead
+		scd_sensor.single_shot();
 	}
 
 	display.clear_display();

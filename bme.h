@@ -147,7 +147,7 @@ class BME {
 		int32_t get_temperature(void) {
 			int32_t temperature = 0;
 			const byte t_mask = (1 << this -> bme_ctrl.osrs_t) - 1;
-			temperature = (((int32_t) this -> bme_data.t_msb) << 12) | (((int32_t) this -> bme_data.t_lsb) << 8) | ((this -> bme_data.t_xlsb >> 4) & t_mask);
+			temperature = (((int32_t) this -> bme_raw_data.t_msb) << 12) | (((int32_t) this -> bme_raw_data.t_lsb) << 8) | ((this -> bme_raw_data.t_xlsb >> 4) & t_mask);
 
 			const int32_t dig_t1 = this -> bme_cd.bme_tcd.t1;
 			const int32_t dig_t2 = this -> bme_cd.bme_tcd.t2;
@@ -166,7 +166,7 @@ class BME {
 		uint32_t get_pressure(void) {
 			int64_t pressure = 0;
 			const byte p_mask = (1 << this -> bme_ctrl.osrs_p) - 1;
-			pressure = (((int32_t) this -> bme_data.p_msb) << 12) | (((int32_t) this -> bme_data.p_lsb) << 8) | ((this -> bme_data.p_xlsb >> 4) & p_mask);
+			pressure = (((int32_t) this -> bme_raw_data.p_msb) << 12) | (((int32_t) this -> bme_raw_data.p_lsb) << 8) | ((this -> bme_raw_data.p_xlsb >> 4) & p_mask);
 
 			const int64_t dig_p1 = this -> bme_cd.bme_pcd.p1;
 			const int64_t dig_p2 = this -> bme_cd.bme_pcd.p2;
@@ -204,7 +204,7 @@ class BME {
 			const int32_t dig_h5 = this -> bme_cd.bme_hcd.h5;
 			const int32_t dig_h6 = this -> bme_cd.bme_hcd.h6;
 
-			uint32_t humidity = ((uint32_t) this -> bme_data.h_msb << 8) | this -> bme_data.h_lsb;
+			uint32_t humidity = ((uint32_t) this -> bme_raw_data.h_msb << 8) | this -> bme_raw_data.h_lsb;
 
 			int32_t tmp = (this -> t_fine - 76800);
 			tmp = (((((humidity << 14) - (dig_h4 << 20) - (dig_h5 * tmp)) + 16384) >> 15) * (((((((tmp * dig_h6) >> 10) * (((tmp * dig_h3) >> 11) + 32768)) >> 10) + 2097152) * dig_h2 + 8192) >> 14));
@@ -246,26 +246,26 @@ class BME {
 			this -> read_registers(BME_DATA, (byte*) &this -> bme_raw_data, sizeof(bme_raw_data_t));
 
 			// NOTE: rounding loses any decimal point should use alternative representation
-			this -> bme_data.temperature = bme_sensor.get_temperature() / 100; 
-			this -> bme_data.pressure    = (bme_sensor.get_pressure() >> 8) / 100;
-			this -> bme_data.humidity    = bme_sensor.get_humidity() >> 10;
+			this -> bme_data.temperature = this -> get_temperature() / 100;
+			this -> bme_data.pressure    = (this -> get_pressure() >> 8) / 100;
+			this -> bme_data.humidity    = this -> get_humidity() >> 10;
 
 			return;
 		}
 
 		void display_bme_data(void) {
 			this -> display.print("Temperature: ");
-			this -> display.print(t);
+			this -> display.print(this -> bme_data.temperature);
 			this -> display.print("C");
 
 			this -> display.next_row();
 			this -> display.print("Pressure: ");
-			this -> display.print(p);
+			this -> display.print(this -> bme_data.pressure);
 			this -> display.print(" hPa");
 
 			this -> display.next_row();
 			this -> display.print("Humidity: ");
-			this -> display.print(h);
+			this -> display.print(this -> bme_data.humidity);
 			this -> display.print("%");
 
 			return;
