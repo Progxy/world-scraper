@@ -13,10 +13,9 @@ typedef enum {
 } LTRRegisters;
 
 typedef enum {
-	LTR_ADDRESS          = 0x53,
-	LTR_MAIN_CTL_DEFAULT = 0x0A,
-	ALS_UVS_DATA_STATUS  = 0x08,
-    BASE_UV_COUNTS       = 1810
+	LTR_ADDRESS           = 0x53,
+	ALS_UVS_DATA_STATUS   = 0x08,
+    BASE_UV_COUNTS        = 1810
 } LTRConstants;
 
 typedef enum {
@@ -54,7 +53,9 @@ typedef enum {
 
 typedef enum {
   ALS_MODE = 0,
-  UVS_MODE = 1
+  UVS_MODE = 1,
+  OFF      = 0,
+  ON       = 1
 } LTRMode;
 
 typedef struct __attribute__((packed)) {
@@ -68,110 +69,119 @@ static const byte res_bit_masks[6]  = { 0x0F, 0x07, 0x03, 0x01, 0xFF, 0x1F };
 static const byte res_multiplier[6] = { 128, 64, 32, 16, 8, 1 };
 static const byte gain_val[5]       = { 1, 3, 6, 9, 18 };
 
-static const float correction_factor = 0.1f;
-
 class LTR {
-  public:
-    byte main_status                      = 0x20;
- 	byte main_ctrl                        = 0x00;
- 	byte gain                             = 0x01;
-    als_uvs_meas_rate_t als_uvs_meas_rate = {0};
+	private:
+		byte main_status                      = 0x20;
+		byte main_ctrl                        = 0x00;
+		byte gain                             = 0x01;
+		uint32_t uvi                          = 0;
+		als_uvs_meas_rate_t als_uvs_meas_rate = {0};
 
-	 byte read_register(byte reg, bool start = true, bool terminate = true) {
-		if (start) Wire.beginTransmission(LTR_ADDRESS);
-		Wire.write(reg);
-		Wire.endTransmission(false);
+		byte read_register(byte reg, bool start = true, bool terminate = true) {
+			if (start) Wire.beginTransmission(LTR_ADDRESS);
+			Wire.write(reg);
+			byte status = Wire.endTransmission(false);
+			if (status) Serial.println("Transmission error.");
 
-		byte data = 0;
-		Wire.requestFrom(LTR_ADDRESS, 1, terminate);
-		if (Wire.available()) data = Wire.read();
+			byte data = 0;
+			byte received = Wire.requestFrom(LTR_ADDRESS, 1, terminate);
+			if (received == 0) Serial.println("Received zero bytes.");
+			else data = Wire.read();
 
-		return data;
-	}
+			return data;
+		}
 
-    void write_register(byte reg, byte data) {
-      Wire.beginTransmission(LTR_ADDRESS);
-      Wire.write(reg);
-      Wire.write(data);
-      Wire.endTransmission();
-      return;
-    }
+		void write_register(byte reg, byte data) {
+			Wire.beginTransmission(LTR_ADDRESS);
+			Wire.write(reg);
+			Wire.write(data);
+			byte status = Wire.endTransmission();
+			if (status) Serial.println("Transmission error.");
+			return;
+		}
 
-	void init(void) {
-  		this -> main_ctrl = this -> read_register(MAIN_CTRL);
-		if (this -> main_ctrl != LTR_MAIN_CTL_DEFAULT) {
-			this -> write_register(MAIN_CTRL, LTR_MAIN_CTL_DEFAULT);
+		uint32_t read_data_reg(byte reg_addr) {
+			uint32_t data = 0;
+			byte res_bit_mask = res_bit_masks[(this -> als_uvs_meas_rate).resolution];
+
+			if ((this -> als_uvs_meas_rate).resolution < 4) {
+				data = this -> read_register(reg_addr + 2, true, false) & res_bit_mask;
+				res_bit_mask = 0xFF;
+			}
+
+			data = (data << 8) | (this -> read_register(reg_addr + 1, false, false) & res_bit_mask);
+			data = (data << 8) | this -> read_register(reg_addr, false, true);
+
+			return data;
+		}
+
+		bool is_data_available(void) {
+			this -> main_status = this -> read_register(MAIN_STATUS);
+			return this -> main_status & ALS_UVS_DATA_STATUS;
+		}
+		
+		uint32_t to_uvi(uint32_t val) {
+			const float correction_factor = 0.1f;
+			const byte gain_factor = (gain_val[MAX_GAIN] / gain_val[this -> gain]);
+			const byte res_factor = (res_multiplier[MAX_RES] / res_multiplier[this -> als_uvs_meas_rate.resolution]);
+			const float adjusted_count = (float) val / BASE_UV_COUNTS;
+			return adjusted_count * gain_factor * res_factor * correction_factor;
+		}
+
+	public:
+		Display display;
+
+		void init(Display display) {
+			this -> display = display;
 			this -> main_ctrl = this -> read_register(MAIN_CTRL);
+			byte als_uvs_meas_rate = this -> read_register(ALS_UVS_MEAS_RATE);
+			this -> als_uvs_meas_rate = *((als_uvs_meas_rate_t*) &als_uvs_meas_rate);
+			this -> main_status = this -> read_register(MAIN_STATUS);
+			this -> gain = this -> read_register(ALS_UVS_GAIN) & 0x7;
+			
+			this -> set_gain(GAIN_2);
+			this -> set_resolution(BIT_18);
+			this -> set_mode(UVS_MODE);
+			this -> toggle_sensor(ON);
+
+			return;
 		}
 
-  		byte als_uvs_meas_rate = this -> read_register(ALS_UVS_MEAS_RATE);
-  		this -> als_uvs_meas_rate = *((als_uvs_meas_rate_t*) &als_uvs_meas_rate);
-  		this -> main_status = this -> read_register(MAIN_STATUS);
-  		this -> gain = this -> read_register(ALS_UVS_GAIN) & 0x7;
-
-   		return;
-	}
-
- 	void info(void) {
-  		Serial.print("gain: ");
-  		Serial.print(gain_val[this -> gain]);
-  		Serial.print(", resolution: ");
-		Serial.println(this -> als_uvs_meas_rate.resolution, DEC);
-		return;
- 	}
-
-	uint32_t read_data_reg(byte reg_addr) {
-		uint32_t data = 0;
-		byte res_bit_mask = res_bit_masks[(this -> als_uvs_meas_rate).resolution];
-
-		if ((this -> als_uvs_meas_rate).resolution < 4) {
-   			data = this -> read_register(reg_addr + 2, true, false) & res_bit_mask;
-   			res_bit_mask = 0xFF;
+		void set_mode(LTRMode ltr_mode) {
+			this -> main_ctrl = (this -> main_ctrl & (~(status << 3))) | (status << 3); 
+			this -> write_register(MAIN_CTRL, this -> main_ctrl);
+			return;
 		}
 
-  		data = (data << 8) | (this -> read_register(reg_addr + 1, false, false) & res_bit_mask);
-		data = (data << 8) | this -> read_register(reg_addr, false, true);
+		void set_gain(LTRGainLevel gain_lvl) {
+			this -> gain = gain_lvl;
+			this -> write_register(ALS_UVS_GAIN, this -> gain);
+			return;
+		}
 
-		return data;
-	}
+		void set_resolution(LTRResolutions res) {
+			this -> als_uvs_meas_rate.resolution = res;
+			this -> write_register(ALS_UVS_MEAS_RATE, *((byte*) &(this -> als_uvs_meas_rate)));
+			return;
+		}
 
-	bool is_data_available(void) {
-   		this -> main_status = this -> read_register(MAIN_STATUS);
-  		return this -> main_status & ALS_UVS_DATA_STATUS;
-	}
+		void toggle_sensor(LTRMode status) {
+			this -> main_ctrl = (this -> main_ctrl & (~(status << 1))) | (status << 1); 
+			this -> write_register(MAIN_CTRL, this -> main_ctrl);
+			return;
+		}
 
- 	void set_mode(LTRMode ltr_mode) {
-   		if (ltr_mode == ALS_MODE) this -> main_ctrl &= 0xF7;
-        else this -> main_ctrl |= 0x08;
-   		this -> write_register(MAIN_CTRL, this -> main_ctrl);
-  		return;
- 	}
+		void sample_uvi(void) {
+			while (!(this -> is_data_available())) delay(500);
+			this -> uvi = this -> to_uvi(this -> read_data_reg(UVS_DATA));
+			return;
+		}
 
-	void reset(void) {
-		const byte reset_val = this -> main_ctrl | 0x10;
-		this -> write_register(MAIN_CTRL, this -> main_ctrl);
-  		this -> init();
-		return;
-	}
-
- 	void set_gain(LTRGainLevel gain_lvl) {
-   		this -> gain = gain_lvl;
-  		this -> write_register(ALS_UVS_GAIN, this -> gain);
-   		return;
- 	}
-
-	 void set_resolution(LTRResolutions res) {
-   		this -> als_uvs_meas_rate.resolution = res;
-  		this -> write_register(ALS_UVS_MEAS_RATE, *((byte*) &(this -> als_uvs_meas_rate)));
-   		return;
-	}
-
- 	uint32_t to_uvi(uint32_t val) {
-   		const byte gain_factor = (gain_val[MAX_GAIN] / gain_val[this -> gain]);
-  		const byte res_factor = (res_multiplier[MAX_RES] / res_multiplier[this -> als_uvs_meas_rate.resolution]);
-  		const float adjusted_count = (float) val / BASE_UV_COUNTS;
-   		return adjusted_count * gain_factor * res_factor * correction_factor;
-	}
+		void display_uvi(void) {
+			this -> display.print("UVI: ");
+			this -> display.print(this -> uvi);
+			return;
+		}
 };
 
 #endif //_LTR_H_
