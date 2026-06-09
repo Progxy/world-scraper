@@ -129,9 +129,9 @@ class LTR {
 		}
 
 	public:
-		Display display;
+		Display* display;
 
-		void init(Display display) {
+		void init(Display* display) {
 			this -> display = display;
 			this -> main_ctrl = this -> read_register(MAIN_CTRL);
 			byte als_uvs_meas_rate = this -> read_register(ALS_UVS_MEAS_RATE);
@@ -178,8 +178,8 @@ class LTR {
 		}
 
 		void display_uvi(void) {
-			this -> display.print("UVI: ");
-			this -> display.print(this -> uvi);
+			(this -> display) -> print("UVI: ");
+			(this -> display) -> print(this -> uvi);
 			return;
 		}
 };

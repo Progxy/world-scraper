@@ -93,10 +93,10 @@ class SCD {
 		}
 
 	public:
-		Display display;
+		Display* display;
 		scd_data_t scd_data = {0};
 
-		void init(Display display) {
+		void init(Display* display) {
 			this -> display = display;
 			delay(30); // Wait for power-up
 			return;
@@ -109,19 +109,19 @@ class SCD {
 		}
 
 		void display_scd_data(void) {
-			this -> display.print("C02: ");
-			this -> display.print(this -> scd_data.c02);
-			this -> display.print(" ppm");
+			(this -> display) -> print("C02: ");
+			(this -> display) -> print(this -> scd_data.c02);
+			(this -> display) -> print(" ppm");
 
-			this -> display.next_row();
-			this -> display.print("Temperature: ");
-			this -> display.print(this -> scd_data.t);
-			this -> display.print("C");
+			(this -> display) -> next_row();
+			(this -> display) -> print("Temperature: ");
+			(this -> display) -> print(this -> scd_data.t);
+			(this -> display) -> print("C");
 
-			this -> display.next_row();
-			this -> display.print("RH: ");
-			this -> display.print(this -> scd_data.rh);
-			this -> display.print("%");
+			(this -> display) -> next_row();
+			(this -> display) -> print("RH: ");
+			(this -> display) -> print(this -> scd_data.rh);
+			(this -> display) -> print("%");
 
 			return;
 		}

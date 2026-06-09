@@ -17,9 +17,9 @@ void setup() {
   Wire.begin();
   Serial.begin(9600);
   display.init();
-  ltr_sensor.init(display);
-  bme_sensor.init(display);
-  scd_sensor.init(display);
+  ltr_sensor.init(&display);
+  bme_sensor.init(&display);
+  scd_sensor.init(&display);
   Serial.println("Setup Completed.");
 }
 

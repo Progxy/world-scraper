@@ -216,12 +216,12 @@ class BME {
 
 
  	public:
-		Display display;
+		Display* display;
 		bme_ctrl_t bme_ctrl         = {0};
 		bme_raw_data_t bme_raw_data = {0};
 		bme_data_t bme_data         = {0};
 
-		void init(Display display) {
+		void init(Display* display) {
 			this -> get_calibration_data();
 			this -> display           = display;
 			this -> bme_ctrl.ctrl_hum = 0x01;
@@ -254,19 +254,19 @@ class BME {
 		}
 
 		void display_bme_data(void) {
-			this -> display.print("Temperature: ");
-			this -> display.print(this -> bme_data.temperature);
-			this -> display.print("C");
+			(this -> display) -> print("Temperature: ");
+			(this -> display) -> print(this -> bme_data.temperature);
+			(this -> display) -> print("C");
 
-			this -> display.next_row();
-			this -> display.print("Pressure: ");
-			this -> display.print(this -> bme_data.pressure);
-			this -> display.print(" hPa");
+			(this -> display) -> next_row();
+			(this -> display) -> print("Pressure: ");
+			(this -> display) -> print(this -> bme_data.pressure);
+			(this -> display) -> print(" hPa");
 
-			this -> display.next_row();
-			this -> display.print("Humidity: ");
-			this -> display.print(this -> bme_data.humidity);
-			this -> display.print("%");
+			(this -> display) -> next_row();
+			(this -> display) -> print("Humidity: ");
+			(this -> display) -> print(this -> bme_data.humidity);
+			(this -> display) -> print("%");
 
 			return;
 		}
