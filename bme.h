@@ -100,8 +100,13 @@ class BME {
 			Wire.beginTransmission(BME_ADDRESS);
 			Wire.write(reg);
 			byte status = Wire.endTransmission(false);
-			if (status) Serial.println("Transmission error.");
-  
+			if (status) {
+		  		Serial.println("Transmission error.");
+			 	Serial.print("BME read status: ");
+			 	Serial.println(status, DEC);
+				return;
+			}
+
 			int received = Wire.requestFrom(BME_ADDRESS, count);
 			if (received < count) Serial.println("Received less bytes than requested");
 			for (byte i = 0; i < count && i < received; ++i) res[i] = Wire.read();
@@ -114,8 +119,12 @@ class BME {
 			Wire.write(reg);
 			Wire.write(data);
 			byte status = Wire.endTransmission();
-			if (status) Serial.println("Transmission error.");
-			return;
+			if (status) {
+     			Serial.println("Transmission error.");
+				Serial.print("BME write status: ");
+    			Serial.println(status, DEC);
+			}
+   			return;
 		}
 
 		void write_bme_ctrl(void) {

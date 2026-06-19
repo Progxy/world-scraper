@@ -81,7 +81,12 @@ class LTR {
 			if (start) Wire.beginTransmission(LTR_ADDRESS);
 			Wire.write(reg);
 			byte status = Wire.endTransmission(false);
-			if (status) Serial.println("Transmission error.");
+			if (status) {
+     			Serial.println("Transmission error.");
+    			Serial.print("LTR read status: ");
+    			Serial.println(status, DEC);
+    			return 0;
+   			}
 
 			byte data = 0;
 			byte received = Wire.requestFrom(LTR_ADDRESS, 1, terminate);
@@ -96,8 +101,12 @@ class LTR {
 			Wire.write(reg);
 			Wire.write(data);
 			byte status = Wire.endTransmission();
-			if (status) Serial.println("Transmission error.");
-			return;
+			if (status) {
+     			Serial.println("Transmission error.");
+				Serial.print("LTR write status: ");
+    			Serial.println(status, DEC);
+			}
+   			return;
 		}
 
 		uint32_t read_data_reg(byte reg_addr) {
@@ -172,8 +181,13 @@ class LTR {
 		}
 
 		void sample_uvi(void) {
-			while (!(this -> is_data_available())) delay(500);
-			this -> uvi = this -> to_uvi(this -> read_data_reg(UVS_DATA));
+    		const byte max_tries = 10;
+   			byte tentative = 0;
+			while (!(this -> is_data_available()) && tentative < max_tries) {
+				tentative++;
+     			delay(500);
+			}
+   			this -> uvi = this -> to_uvi(this -> read_data_reg(UVS_DATA));
 			return;
 		}
 

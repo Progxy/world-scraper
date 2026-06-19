@@ -31,7 +31,12 @@ class SCD {
 			buf[1] = (byte) ((addr & 0x00FF) >> 0);
 			Wire.write(buf, 2);
 			byte status = Wire.endTransmission();
-			if (status) Serial.println("Transmission error.");
+			if (status) {
+   	  			Serial.println("Transmission error.");
+   				Serial.print("SCD read status: ");
+    			Serial.println(status, DEC);
+   				return;
+   			}
 
 			delay(exec_time_ms);
 
