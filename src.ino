@@ -43,6 +43,6 @@ void loop() {
     scd_sensor.display_scd_data();
 	display.display();
 
-  delay(1000);
+	delay(1000);
 	i++;
 }
