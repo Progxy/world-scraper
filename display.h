@@ -143,7 +143,10 @@ class Display {
 			if (this -> display_idx + sizeof(*font_atlas) >= sizeof(this -> display_buf)) {
 				Serial.println("Not enough space for the character buy a bigger screen, loser!");
 			 	return;
-			}
+			} else if (c == '\n') {
+     			this -> next_row();
+    			return;
+   			}
 
 			memcpy(this -> display_buf + this -> display_idx, font_atlas[(c - 0x20) % sizeof(font_atlas)], sizeof(*font_atlas));
 			this -> display_idx = (this -> display_idx + sizeof(*font_atlas)) % sizeof(this -> display_buf);
@@ -200,6 +203,26 @@ class Display {
 			this -> display_idx %= sizeof(this -> display_buf);
 			return;
 		}
+
+	 void display_rand_quote(void) {
+	    const char* weather_quotes[6] = {
+	        // 1. Stevenson
+	        "\"THERE IS NO     \nBAD WEATHER,ONLY \nGOOD CLOTHES-RLS\"",
+	        // 2. Charles Warner
+	        "\"EVERYONE TALKS  \nABOUT WEATHER..  \nBUT NO ACTION-CW\"",
+	        // 3. John Ruskin
+	        "\"SUN IS DELIGHT  \nRAIN REFRESHING  \n-JR        \\o/ \"",
+	        // 4. Bob Marley
+	        "\"SOME PEOPLE     \nFEEL THE RAIN..  \n-BM      ( ._.) \"",
+	        // 5. Henry Wadsworth Longfellow
+	        "\"INTO EACH LIFE  \nSOME RAIN MUST   \nFALL.-HWL ( ._.)\""
+	    };
+
+	    int random_pick = random(5);
+	    this -> print(weather_quotes[random_pick]);
+
+	    return;
+	}
 };
 
 #endif //_DISPLAY_H_

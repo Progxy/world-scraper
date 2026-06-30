@@ -18,6 +18,7 @@ void setup() {
   bme_sensor.init(&display);
   scd_sensor.init(&display);
   Serial.println("Setup Completed.");
+  randomSeed(analogRead(0));
 }
 
 #define SAMPLING_FREQ 10
@@ -49,6 +50,9 @@ void loop() {
 	display.print("Humidity: ");
 	display.print(fusion_h);
 	display.print("%");
+
+ 	display.next_row();
+ 	display.display_rand_quote();
 
 	display.display();
 
