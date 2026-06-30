@@ -99,6 +99,7 @@ class BME {
 		void read_registers(byte reg, byte* res, int count) {
 			Wire.beginTransmission(BME_ADDRESS);
 			Wire.write(reg);
+			
 			byte status = Wire.endTransmission(false);
 			if (status) {
 		  		Serial.println("Transmission error.");
@@ -118,13 +119,15 @@ class BME {
 			Wire.beginTransmission(BME_ADDRESS);
 			Wire.write(reg);
 			Wire.write(data);
+	
 			byte status = Wire.endTransmission();
 			if (status) {
      			Serial.println("Transmission error.");
 				Serial.print("BME write status: ");
     			Serial.println(status, DEC);
 			}
-   			return;
+   	
+			return;
 		}
 
 		void write_bme_ctrl(void) {
@@ -199,9 +202,8 @@ class BME {
 			pressure = (((pressure << 31) - b) * 3125) / a;
 			a = (dig_p9 * (pressure >> 13) * (pressure >> 13)) >> 25;
 			b = (dig_p8 * pressure) >> 19;
-			pressure = ((pressure + a + b) >> 8) + (dig_p7 << 4);
-
-			return pressure;
+			
+			return (((pressure + a + b) >> 8) + (dig_p7 << 4));
 		}
 
 		// NOTE: The result is in format Q22.10 unsigned
@@ -246,18 +248,29 @@ class BME {
 			this -> write_bme_ctrl();
 
 			byte is_data_available = 0x00;
-			while (!is_data_available) {
+			for (byte i = 0; !is_data_available; ++i) {
+				if (i == MAX_ATTEMPTS) return;
 				this -> read_registers(BME_STATUS, &is_data_available, 1);
 				is_data_available = (~is_data_available) & 0x80;
 				delay(500);
 			}
-
+			
 			this -> read_registers(BME_DATA, (byte*) &this -> bme_raw_data, sizeof(bme_raw_data_t));
+			
+			this -> bme_data.temperature = this -> get_temperature();
+			this -> bme_data.pressure    = this -> get_pressure();
+			this -> bme_data.humidity    = this -> get_humidity();
+
+			Serial.println("Sample BME values(t, p, h): ");
+			Serial.println(this -> bme_data.temperature, HEX);
+			Serial.println(this -> bme_data.pressure   , HEX);
+			Serial.println(this -> bme_data.humidity   , HEX);
+			Serial.println("-------------------");
 
 			// NOTE: rounding loses any decimal point should use alternative representation
-			this -> bme_data.temperature = this -> get_temperature() / 100;
-			this -> bme_data.pressure    = (this -> get_pressure() >> 8) / 100;
-			this -> bme_data.humidity    = this -> get_humidity() >> 10;
+			this -> bme_data.temperature /= 100;
+			this -> bme_data.pressure    = (this -> bme_data.pressure >> 8) / 100;
+			this -> bme_data.humidity    >>= 10;
 
 			return;
 		}

@@ -47,9 +47,11 @@ class Display {
 		    while (count) {
 			   Wire.beginTransmission(DISPLAY_ADDRESS);
 			   Wire.write((byte) PIXEL_BYTE);
+			   
 			   const byte sent = Wire.write(data, MIN(count, BUFFER_LENGTH - 1));
 			   count -= sent;
 			   data += sent;
+			   
 			   byte status = Wire.endTransmission();
 			   if (status) {
 					Serial.println("Failed to send pixels.");
@@ -57,7 +59,8 @@ class Display {
 					Serial.println(status, DEC);
 					return;
 			   }
-			 }
+			}
+			
 			return;
 		}
 
@@ -65,13 +68,16 @@ class Display {
 			Wire.beginTransmission(DISPLAY_ADDRESS);
 			Wire.write(COMMAND_BYTE);
 			Wire.write(cmd);
+			
 			if (count > 0 || data == NULL) Wire.write(data, count);
+			
 			byte status = Wire.endTransmission();
    			if (status) {
    	  			Serial.println("Failed to send command.");
    				Serial.print("Display send status: ");
     			Serial.println(status, DEC);
    			}
+			
 			return;
 		}
 
@@ -194,7 +200,6 @@ class Display {
 			this -> display_idx %= sizeof(this -> display_buf);
 			return;
 		}
-
 };
 
 #endif //_DISPLAY_H_

@@ -4,10 +4,6 @@
 #include "bme.h"
 #include "scd.h"
 
-// TODO: Handle communications errors
-// TODO: Re-evaluate the sampling, in order to draw the least amount of current
-// TODO: Refactor the code
-
 LTR ltr_sensor;
 BME bme_sensor;
 SCD scd_sensor;
@@ -24,16 +20,12 @@ void setup() {
 }
 
 #define SAMPLING_FREQ 10
-static int i = 0;
+#define MAX_ATTEMPTS  10
 
 void loop() {
-	if ((i % SAMPLING_FREQ) == 0) {
-		ltr_sensor.sample_uvi();
-		bme_sensor.sample();
-		// NOTE: Should either use the low power mode periodic, or normal periodic
-		//       measuring instead
-		scd_sensor.single_shot();
-	}
+  ltr_sensor.sample_uvi();
+  bme_sensor.sample();
+  scd_sensor.sample();
 
 	display.clear_display();
     ltr_sensor.display_uvi();
@@ -43,6 +35,5 @@ void loop() {
     scd_sensor.display_scd_data();
 	display.display();
 
-	delay(1000);
-	i++;
+	for (byte i = 0; i < SAMPLING_FREQ; ++i) delay(1000);
 }

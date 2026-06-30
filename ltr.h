@@ -15,7 +15,8 @@ typedef enum {
 typedef enum {
 	LTR_ADDRESS           = 0x53,
 	ALS_UVS_DATA_STATUS   = 0x08,
-    BASE_UV_COUNTS        = 1810
+    BASE_UV_COUNTS        = 1810,
+	LTR_INTERRUPT_PIN     = 19
 } LTRConstants;
 
 typedef enum {
@@ -80,6 +81,7 @@ class LTR {
 		byte read_register(byte reg, bool start = true, bool terminate = true) {
 			if (start) Wire.beginTransmission(LTR_ADDRESS);
 			Wire.write(reg);
+			
 			byte status = Wire.endTransmission(false);
 			if (status) {
      			Serial.println("Transmission error.");
@@ -100,13 +102,15 @@ class LTR {
 			Wire.beginTransmission(LTR_ADDRESS);
 			Wire.write(reg);
 			Wire.write(data);
+			
 			byte status = Wire.endTransmission();
 			if (status) {
      			Serial.println("Transmission error.");
 				Serial.print("LTR write status: ");
     			Serial.println(status, DEC);
 			}
-   			return;
+   			
+			return;
 		}
 
 		uint32_t read_data_reg(byte reg_addr) {
@@ -137,10 +141,16 @@ class LTR {
 			return adjusted_count * gain_factor * res_factor * correction_factor;
 		}
 
+		uint32_t to_uvi2(uint32_t val) {
+			const float window_factor = 1.0f;
+			return (((float) val) / UV_SENSITIVITY) * window_factor;
+		}
+
 	public:
 		Display* display;
 
 		void init(Display* display) {
+			pinMode(LTR_INTERRUPT_PIN, INPUT);
 			this -> display = display;
 			this -> main_ctrl = this -> read_register(MAIN_CTRL);
 			byte als_uvs_meas_rate = this -> read_register(ALS_UVS_MEAS_RATE);
@@ -148,8 +158,9 @@ class LTR {
 			this -> main_status = this -> read_register(MAIN_STATUS);
 			this -> gain = this -> read_register(ALS_UVS_GAIN) & 0x7;
 			
-			this -> set_gain(GAIN_2);
-			this -> set_resolution(BIT_18);
+			this -> set_gain(MAX_GAIN);
+			this -> set_resolution(MAX_RES);
+			this -> set_measurement_rate(MIN_RATE);
 			this -> set_mode(UVS_MODE);
 			this -> toggle_sensor(ON);
 
@@ -174,6 +185,12 @@ class LTR {
 			return;
 		}
 
+		void set_measurement_rate(LTRMeasurementRate meas) {
+			this -> als_uvs_meas_rate.measurement_rate = meas;
+			this -> write_register(ALS_UVS_MEAS_RATE, *((byte*) &(this -> als_uvs_meas_rate)));
+			return;
+		}
+
 		void toggle_sensor(LTRMode status) {
 			this -> main_ctrl = (this -> main_ctrl & (~(status << 1))) | (status << 1); 
 			this -> write_register(MAIN_CTRL, this -> main_ctrl);
@@ -181,13 +198,15 @@ class LTR {
 		}
 
 		void sample_uvi(void) {
-    		const byte max_tries = 10;
-   			byte tentative = 0;
-			while (!(this -> is_data_available()) && tentative < max_tries) {
-				tentative++;
-     			delay(500);
+			for (byte i = 0; !(this -> is_data_available()); ++i) {
+				if (i == MAX_ATTEMPTS) return;
+				delay(500);
 			}
+
    			this -> uvi = this -> to_uvi(this -> read_data_reg(UVS_DATA));
+			
+			Serial.print("UVI2: ");
+			Serial.println(this -> to_uvi2(this -> read_data_reg(UVS_DATA)));
 			return;
 		}
 

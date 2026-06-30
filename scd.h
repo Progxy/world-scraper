@@ -26,10 +26,12 @@ class SCD {
 	private:
 		void read_address(uint16_t addr, scd_response_t* dest, byte cnt, uint16_t exec_time_ms = 1) {
 			byte buf[3] = {0};
-			Wire.beginTransmission((byte) SCD_ADDRESS);
 			buf[0] = (byte) ((addr & 0xFF00) >> 8);
 			buf[1] = (byte) ((addr & 0x00FF) >> 0);
+			
+			Wire.beginTransmission((byte) SCD_ADDRESS);
 			Wire.write(buf, 2);
+			
 			byte status = Wire.endTransmission();
 			if (status) {
    	  			Serial.println("Transmission error.");
@@ -44,7 +46,7 @@ class SCD {
 
 			byte received = Wire.requestFrom((byte) SCD_ADDRESS, cnt * sizeof(scd_response_t));
 			if (received < cnt * sizeof(scd_response_t)) {
-				Serial.println("Received less than requested.");
+				Serial.println("SCD Received less bytes than requested.");
 				return;
 			}
 
@@ -86,9 +88,9 @@ class SCD {
 			scd_response_t measurement[3] = {0};
 			this -> read_address(READ_MEASUREMENT, measurement, 3);
 
-			if (this -> check_crc(measurement[0])) Serial.println("Failed check CRC on C02");
-			if (this -> check_crc(measurement[1])) Serial.println("Failed check CRC on Temperature");
-			if (this -> check_crc(measurement[2])) Serial.println("Failed check CRC on RH");
+			if (this -> check_crc(measurement[0])) Serial.println("Failed CRC check on C02");
+			if (this -> check_crc(measurement[1])) Serial.println("Failed CRC check on Temperature");
+			if (this -> check_crc(measurement[2])) Serial.println("Failed CRC check on RH");
 
 			this -> scd_data.c02 = measurement[0].data;
 			this -> scd_data.t   = -45 + 175 * (((float) measurement[1].data) / 0xFFFF);
@@ -107,7 +109,7 @@ class SCD {
 			return;
 		}
 
-		void single_shot(void) {
+		void sample(void) {
 			this -> read_address(MEASURE_SINGLE_SHOT, NULL, 0, 5000);
 			this -> read_measurement();
 			return;
