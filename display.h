@@ -207,15 +207,15 @@ class Display {
 	 void display_rand_quote(void) {
 	    const char* weather_quotes[6] = {
 	        // 1. Stevenson
-	        "\"THERE IS NO     \nBAD WEATHER,ONLY \nGOOD CLOTHES-RLS\"",
+	        "\"THERE IS NO     \nBAD WEATHER, ONLY\nGOOD CLOTHES\"-RLS",
 	        // 2. Charles Warner
-	        "\"EVERYONE TALKS  \nABOUT WEATHER..  \nBUT NO ACTION-CW\"",
+	        "\"EVERYONE TALKS  \nABOUT WEATHER..  \nBUT NO ACTION\"-CW",
 	        // 3. John Ruskin
-	        "\"SUN IS DELIGHT  \nRAIN REFRESHING  \n-JR        \\o/ \"",
+	        "\"SUN IS DELIGHT  \nRAIN REFRESHING \"\n - JR            ",
 	        // 4. Bob Marley
-	        "\"SOME PEOPLE     \nFEEL THE RAIN..  \n-BM      ( ._.) \"",
+	        "\"SOME PEOPLE     \nFEEL THE RAIN.. \"\n - BM            ",
 	        // 5. Henry Wadsworth Longfellow
-	        "\"INTO EACH LIFE  \nSOME RAIN MUST   \nFALL.-HWL ( ._.)\""
+	        "\"INTO EACH LIFE  \nSOME RAIN MUST   \nFALL.\" - HWL     "
 	    };
 
 	    int random_pick = random(5);
