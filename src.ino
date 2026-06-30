@@ -1,4 +1,5 @@
 #include <Wire.h>
+#define MAX_ATTEMPTS  10
 #include "display.h"
 #include "ltr.h"
 #include "bme.h"
@@ -20,7 +21,6 @@ void setup() {
 }
 
 #define SAMPLING_FREQ 10
-#define MAX_ATTEMPTS  10
 
 void loop() {
   ltr_sensor.sample_uvi();
@@ -31,8 +31,25 @@ void loop() {
     ltr_sensor.display_uvi();
     display.next_row();
     bme_sensor.display_bme_data();
+	display.next_row();
+	scd_sensor.display_scd_data();
     display.next_row();
-    scd_sensor.display_scd_data();
+
+    const uint32_t fusion_t = ((bme_sensor.bme_data.temperature / 100 * 15) + (scd_sensor.scd_data.t * 85)) / 100;
+ 	const uint32_t fusion_t_dec = (bme_sensor.bme_data.temperature % 100) * 15 / 100;
+    display.print("Temperature: ");
+    display.print(fusion_t);
+ 	display.print(".");
+ 	display.print(fusion_t_dec / 10);
+    display.print("C");
+
+	display.next_row();
+
+	const uint32_t fusion_h = (bme_sensor.bme_data.humidity + scd_sensor.scd_data.rh) / 2;
+	display.print("Humidity: ");
+	display.print(fusion_h);
+	display.print("%");
+
 	display.display();
 
 	for (byte i = 0; i < SAMPLING_FREQ; ++i) delay(1000);

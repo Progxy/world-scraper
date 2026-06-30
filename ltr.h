@@ -16,6 +16,7 @@ typedef enum {
 	LTR_ADDRESS           = 0x53,
 	ALS_UVS_DATA_STATUS   = 0x08,
     BASE_UV_COUNTS        = 1810,
+	UV_SENSITIVITY        = 2300,
 	LTR_INTERRUPT_PIN     = 19
 } LTRConstants;
 
@@ -66,9 +67,8 @@ typedef struct __attribute__((packed)) {
   byte rsv: 1;
 } als_uvs_meas_rate_t;
 
+static const uint16_t measurement_rate_ms[8] = { 25, 50, 100, 200, 500, 1000, 2000, 2000 };
 static const byte res_bit_masks[6]  = { 0x0F, 0x07, 0x03, 0x01, 0xFF, 0x1F };
-static const byte res_multiplier[6] = { 128, 64, 32, 16, 8, 1 };
-static const byte gain_val[5]       = { 1, 3, 6, 9, 18 };
 
 class LTR {
 	private:
@@ -132,18 +132,11 @@ class LTR {
 			this -> main_status = this -> read_register(MAIN_STATUS);
 			return this -> main_status & ALS_UVS_DATA_STATUS;
 		}
-		
-		uint32_t to_uvi(uint32_t val) {
-			const float correction_factor = 0.1f;
-			const byte gain_factor = (gain_val[MAX_GAIN] / gain_val[this -> gain]);
-			const byte res_factor = (res_multiplier[MAX_RES] / res_multiplier[this -> als_uvs_meas_rate.resolution]);
-			const float adjusted_count = (float) val / BASE_UV_COUNTS;
-			return adjusted_count * gain_factor * res_factor * correction_factor;
-		}
 
-		uint32_t to_uvi2(uint32_t val) {
+		uint32_t to_uvi(uint32_t val) {
 			const float window_factor = 1.0f;
-			return (((float) val) / UV_SENSITIVITY) * window_factor;
+   			const float time_factor = measurement_rate_ms[this -> als_uvs_meas_rate.measurement_rate] / 400.0f;
+			return (((float) val) / (UV_SENSITIVITY * time_factor)) * window_factor;
 		}
 
 	public:
@@ -202,11 +195,7 @@ class LTR {
 				if (i == MAX_ATTEMPTS) return;
 				delay(500);
 			}
-
    			this -> uvi = this -> to_uvi(this -> read_data_reg(UVS_DATA));
-			
-			Serial.print("UVI2: ");
-			Serial.println(this -> to_uvi2(this -> read_data_reg(UVS_DATA)));
 			return;
 		}
 

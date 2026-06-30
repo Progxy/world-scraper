@@ -258,38 +258,16 @@ class BME {
 			this -> read_registers(BME_DATA, (byte*) &this -> bme_raw_data, sizeof(bme_raw_data_t));
 			
 			this -> bme_data.temperature = this -> get_temperature();
-			this -> bme_data.pressure    = this -> get_pressure();
-			this -> bme_data.humidity    = this -> get_humidity();
-
-			Serial.println("Sample BME values(t, p, h): ");
-			Serial.println(this -> bme_data.temperature, HEX);
-			Serial.println(this -> bme_data.pressure   , HEX);
-			Serial.println(this -> bme_data.humidity   , HEX);
-			Serial.println("-------------------");
-
-			// NOTE: rounding loses any decimal point should use alternative representation
-			this -> bme_data.temperature /= 100;
-			this -> bme_data.pressure    = (this -> bme_data.pressure >> 8) / 100;
-			this -> bme_data.humidity    >>= 10;
+			this -> bme_data.pressure    = this -> get_pressure() / 25600;
+			this -> bme_data.humidity    = this -> get_humidity() / 1024;
 
 			return;
 		}
 
 		void display_bme_data(void) {
-			(this -> display) -> print("Temperature: ");
-			(this -> display) -> print(this -> bme_data.temperature);
-			(this -> display) -> print("C");
-
-			(this -> display) -> next_row();
 			(this -> display) -> print("Pressure: ");
 			(this -> display) -> print(this -> bme_data.pressure);
 			(this -> display) -> print(" hPa");
-
-			(this -> display) -> next_row();
-			(this -> display) -> print("Humidity: ");
-			(this -> display) -> print(this -> bme_data.humidity);
-			(this -> display) -> print("%");
-
 			return;
 		}
 };

@@ -119,17 +119,6 @@ class SCD {
 			(this -> display) -> print("C02: ");
 			(this -> display) -> print(this -> scd_data.c02);
 			(this -> display) -> print(" ppm");
-
-			(this -> display) -> next_row();
-			(this -> display) -> print("Temperature: ");
-			(this -> display) -> print(this -> scd_data.t);
-			(this -> display) -> print("C");
-
-			(this -> display) -> next_row();
-			(this -> display) -> print("RH: ");
-			(this -> display) -> print(this -> scd_data.rh);
-			(this -> display) -> print("%");
-
 			return;
 		}
 };
